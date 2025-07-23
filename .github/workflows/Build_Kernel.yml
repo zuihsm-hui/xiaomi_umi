@@ -24,7 +24,6 @@ on:
           - 'umi'
           - 'psyche'
           - 'pipa'
-          - 'all'
       compiled_system:
         description: 'Applicable systems (适用系统)'
         required: true
@@ -141,7 +140,7 @@ jobs:
         run: |
           echo "正在克隆内核源码..."
           rm -rf $KERNEL_SOURCE
-          git clone https://github.com/cctv18/kernel_xiaomi_sm8250_mod.git -b android14-lineage22-mod --depth=1 $KERNEL_SOURCE
+          git clone https://github.com/zuihsm-hui/xiaomi_umi.git -b 01 --depth=1 $KERNEL_SOURCE
           echo "✅ Kernel source code cloning complete (内核源码克隆完成)"
 
       - name: 📥 Caching toolchain (缓存工具链)
@@ -189,17 +188,17 @@ jobs:
           
           echo "✅ Toolchain download complete (工具链下载完成)"
 
-      - name: ⚙️ Configuring KernelSU (配置 KernelSU)
-        run: |
-          cd "$KERNEL_SOURCE"
+      - #name: ⚙️ Configuring KernelSU (配置 KernelSU)
+        #run: |
+          #cd "$KERNEL_SOURCE"
           
-          KSU_VARIANT="SukiSU-Ultra"
+          #KSU_VARIANT="SukiSU-Ultra"
           
-          echo "⚙️ KernelSU Version: $KSU_VARIANT (KernelSU 版本: $KSU_VARIANT)"
+          #echo "⚙️ KernelSU Version: $KSU_VARIANT (KernelSU 版本: $KSU_VARIANT)"
           
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/susfs-main/kernel/setup.sh" | bash -s susfs-main
+          #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/susfs-main/kernel/setup.sh" | bash -s susfs-main
           
-          echo "✅ $KSU_VARIANT configuration complete ($KSU_VARIANT 配置完成)"
+          #echo "✅ $KSU_VARIANT configuration complete ($KSU_VARIANT 配置完成)"
 
       - name: 🛠️ Setup LXC (安装 LXC 补丁)
         run: |
@@ -238,28 +237,28 @@ jobs:
             echo "ℹ️ LXC is not enabled. (LXC 未启用)"
           fi
 
-      - name: 🛠️ Setup patches for SukiSU (为 SukiSU 安装补丁)
-        run: |
-          cd "$KERNEL_SOURCE"
-          echo "Applying patches for SukiSU..."
+      - #name: 🛠️ Setup patches for SukiSU (为 SukiSU 安装补丁)
+        #run: |
+          #cd "$KERNEL_SOURCE"
+          #echo "Applying patches for SukiSU..."
           
           #SUSFS for SukiSU 补丁：
-          git clone https://github.com/ShirkNeko/susfs4ksu.git -b kernel-4.19
-          cp ./susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.19.patch ./
-          cp ./susfs4ksu/kernel_patches/fs/* ./fs/
-          cp ./susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-          patch -p1 -F 3 < 50_add_susfs_in_kernel-4.19.patch || true
+          #git clone https://github.com/ShirkNeko/susfs4ksu.git -b kernel-4.19
+          #cp ./susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.19.patch ./
+          #cp ./susfs4ksu/kernel_patches/fs/* ./fs/
+          #cp ./susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+          #patch -p1 -F 3 < 50_add_susfs_in_kernel-4.19.patch || true
           
           #内核钩子补丁：
-          git clone https://github.com/ShirkNeko/SukiSU_patch.git
-          cp ./SukiSU_patch/4.19/ksu_hooks_sukisu_4.19.patch ./
-          patch -p1 -F 3 < ksu_hooks_sukisu_4.19.patch || true
+          #git clone https://github.com/ShirkNeko/SukiSU_patch.git
+          #cp ./SukiSU_patch/4.19/ksu_hooks_sukisu_4.19.patch ./
+          #patch -p1 -F 3 < ksu_hooks_sukisu_4.19.patch || true
           
           #特征隐藏补丁：
-          cp ./SukiSU_patch/69_hide_stuff.patch ./
-          patch -p1 -F 3 < 69_hide_stuff.patch || true
+          #cp ./SukiSU_patch/69_hide_stuff.patch ./
+          #patch -p1 -F 3 < 69_hide_stuff.patch || true
           
-          echo "补丁完成！"
+          #echo "补丁完成！"
           
       - name: 🔨 Build the kernel (构建内核)
         run: |
@@ -439,34 +438,8 @@ jobs:
           fi
             
           # 添加 KSU 配置
-          echo "🔧 Applying SukiSU-Ultra Configuration... (应用 SukiSU-Ultra 配置)"
-          scripts/config --file out/.config \
-              -e KSU \
-              -e KPM \
-              -e KSU_MANUAL_HOOK \
-              -e KSU_SUSFS \
-              -e KSU_SUSFS_HAS_MAGIC_MOUNT \
-              -e KSU_SUSFS_SUS_PATH \
-              -e KSU_SUSFS_SUS_MOUNT \
-              -e KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT \
-              -e KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT \
-              -e KSU_SUSFS_SUS_KSTAT \
-              -d KSU_SUSFS_SUS_OVERLAYFS \
-              -e KSU_SUSFS_TRY_UMOUNT \
-              -e KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT \
-              -e KSU_SUSFS_SPOOF_UNAME \
-              -e KSU_SUSFS_ENABLE_LOG \
-              -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
-              -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
-              -e KSU_SUSFS_OPEN_REDIRECT \
-              -d KSU_SUSFS_SUS_SU
-            
-          # 判断KPM是否启用并开启相关配置
-          #if [ "$KSU" == "SukiSU-Ultra" ] && [ "$KPM" == "enable" ]; then
-          #    echo "🔧 Enabling KPM Configuration... (开启 KPM 配置)"
-          #    scripts/config --file out/.config \
-          #        -e KPM
-          #fi
+          #echo "🔧 Applying SukiSU-Ultra Configuration... (应用 SukiSU-Ultra 配置)"
+          #scripts/config --file out/.config \
             
           # 修改内核版本号
           if [ ! -z "$VERSION" ]; then
