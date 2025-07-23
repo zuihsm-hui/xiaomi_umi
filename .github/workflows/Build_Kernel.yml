@@ -188,18 +188,6 @@ jobs:
           
           echo "✅ Toolchain download complete (工具链下载完成)"
 
-      - #name: ⚙️ Configuring KernelSU (配置 KernelSU)
-        #run: |
-          #cd "$KERNEL_SOURCE"
-          
-          #KSU_VARIANT="SukiSU-Ultra"
-          
-          #echo "⚙️ KernelSU Version: $KSU_VARIANT (KernelSU 版本: $KSU_VARIANT)"
-          
-          #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/susfs-main/kernel/setup.sh" | bash -s susfs-main
-          
-          #echo "✅ $KSU_VARIANT configuration complete ($KSU_VARIANT 配置完成)"
-
       - name: 🛠️ Setup LXC (安装 LXC 补丁)
         run: |
           LXC_ENABLE="${{ github.event.inputs.lxc_enable }}"
@@ -236,29 +224,6 @@ jobs:
           else 
             echo "ℹ️ LXC is not enabled. (LXC 未启用)"
           fi
-
-      - #name: 🛠️ Setup patches for SukiSU (为 SukiSU 安装补丁)
-        #run: |
-          #cd "$KERNEL_SOURCE"
-          #echo "Applying patches for SukiSU..."
-          
-          #SUSFS for SukiSU 补丁：
-          #git clone https://github.com/ShirkNeko/susfs4ksu.git -b kernel-4.19
-          #cp ./susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.19.patch ./
-          #cp ./susfs4ksu/kernel_patches/fs/* ./fs/
-          #cp ./susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-          #patch -p1 -F 3 < 50_add_susfs_in_kernel-4.19.patch || true
-          
-          #内核钩子补丁：
-          #git clone https://github.com/ShirkNeko/SukiSU_patch.git
-          #cp ./SukiSU_patch/4.19/ksu_hooks_sukisu_4.19.patch ./
-          #patch -p1 -F 3 < ksu_hooks_sukisu_4.19.patch || true
-          
-          #特征隐藏补丁：
-          #cp ./SukiSU_patch/69_hide_stuff.patch ./
-          #patch -p1 -F 3 < 69_hide_stuff.patch || true
-          
-          #echo "补丁完成！"
           
       - name: 🔨 Build the kernel (构建内核)
         run: |
@@ -436,10 +401,6 @@ jobs:
               scripts/config --file out/.config \
                   -d PERF_HUMANTASK
           fi
-            
-          # 添加 KSU 配置
-          #echo "🔧 Applying SukiSU-Ultra Configuration... (应用 SukiSU-Ultra 配置)"
-          #scripts/config --file out/.config \
             
           # 修改内核版本号
           if [ ! -z "$VERSION" ]; then
